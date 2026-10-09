@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HQ Command Center | National Security & Registry System</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,700;1,600&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- CSS Frameworks -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Top Tactical Header -->
+  <header class="tactical-header sticky-top">
+    <div class="container-fluid px-4 py-2 d-flex justify-content-between align-items-center">
+      
+      <!-- Brand & Security Badge -->
+      <div class="d-flex align-items-center gap-3">
+        <div class="brand-shield">
+          <i class="fa-solid fa-user-shield"></i>
+        </div>
+        <div>
+          <div class="brand-title" data-i18n="sys_title">ระบบฐานข้อมูลทะเบียนราษฎร์และกำลังพลแห่งชาติ</div>
+          <div class="brand-sub">
+            <span class="security-tag"><i class="fa-solid fa-lock text-warning me-1"></i> RESTRICTED ACCESS LEVEL 5</span>
+            <span class="ms-2 d-none d-md-inline" data-i18n="sys_subtitle">ระบบการปกครองและลงทะเบียนกำลังพลแห่งชาติ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls: Theme, Lang, Refresh -->
+      <div class="d-flex align-items-center gap-2 gap-md-3">
+        <!-- Day/Night Toggle (Default: Day) -->
+        <button class="btn btn-tactical-toggle" id="themeToggleBtn" onclick="toggleTheme()" title="Switch Theme">
+          <i class="fa-solid fa-sun text-warning" id="themeIcon"></i>
+          <span class="d-none d-lg-inline ms-1" id="themeText" data-i18n="mode_day">โหมดกลางวัน</span>
+        </button>
+
+        <!-- TH / EN Lang Toggle (Default: TH) -->
+        <button class="btn btn-tactical-toggle" id="langToggleBtn" onclick="toggleLanguage()" title="Switch Language">
+          <i class="fa-solid fa-language text-cyan"></i>
+          <span class="fw-bold ms-1" id="langText">TH</span>
+        </button>
+
+        <!-- Refresh Button -->
+        <button class="btn btn-executive-refresh" onclick="loadAllData()">
+          <i class="fa-solid fa-arrows-rotate me-1"></i> <span data-i18n="btn_refresh">โหลดใหม่</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <div class="container-fluid px-4 mt-4">
+    <!-- Stat Cards / KPI -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="exec-card kpi-pending">
+          <div class="kpi-icon"><i class="fa-solid fa-file-shield"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-label" data-i18n="kpi_pending">คำขอรออนุมัติบรรจุ (INPUT)</span>
+            <div class="kpi-value text-amber" id="statPendingCount">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="exec-card kpi-members">
+          <div class="kpi-icon"><i class="fa-solid fa-users-viewfinder"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-label" data-i18n="kpi_database">กำลังพลในระบบทั้งหมด (DATABASE)</span>
+            <div class="kpi-value text-cyan" id="statMemberCount">0</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="exec-card kpi-status">
+          <div class="kpi-icon"><i class="fa-solid fa-network-wired"></i></div>
+          <div class="kpi-info">
+            <span class="kpi-label" data-i18n="kpi_status">สถานะการเชื่อมต่อชีท</span>
+            <div class="kpi-value-sm" id="connectionStatus">
+              <i class="fa-solid fa-circle-check text-success me-1"></i> LIVE API CONNECTED
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- แถบสถิติกำลังพลแยกตามเหล่า (Personnel Breakdown Bar) -->
+    <div class="agency-breakdown-bar mb-4 p-3 rounded-4 shadow-sm">
+      <div class="row g-3 align-items-center">
+        <div class="col-md-4 d-flex align-items-center gap-3 border-end-md">
+          <img src="Thai_National_Police_Flag.svg.webp" class="agency-flag-lg" alt="Police Flag">
+          <div>
+            <div class="text-muted small fw-bold" data-i18n="police_count_label">กำลังพล สำนักงานตำรวจแห่งชาติ</div>
+            <div class="fs-4 fw-bold text-primary"><span id="policeCount">0</span> <small class="fs-6 text-muted" data-i18n="unit_person">นาย</small></div>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-3 border-end-md">
+          <img src="Naval_Ensign_of_Thailand-2.svg" class="agency-flag-lg" alt="Navy Flag">
+          <div>
+            <div class="text-muted small fw-bold" data-i18n="navy_count_label">กำลังพล กองทัพเรือ</div>
+            <div class="fs-4 fw-bold text-info"><span id="navyCount">0</span> <small class="fs-6 text-muted" data-i18n="unit_person">นาย</small></div>
+          </div>
+        </div>
+        <div class="col-md-4 d-flex align-items-center gap-3">
+          <div class="total-icon-box"><i class="fa-solid fa-chart-pie"></i></div>
+          <div>
+            <div class="text-muted small fw-bold" data-i18n="total_count_label">สัดส่วนกำลังพลภาพรวม</div>
+            <div class="fs-6 fw-bold" id="ratioStatus">ตร. 0% | ทร. 0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Tactical Panel -->
+    <div class="exec-panel mb-5">
+      <!-- Tabs Bar -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="exec-tabs">
+          <button class="exec-tab-btn active" onclick="switchTab('inputTab', this)">
+            <i class="fa-solid fa-inbox me-2"></i> <span data-i18n="tab_input">คำขอสมัครใหม่</span>
+            <span class="badge bg-amber ms-2" id="pendingBadge">0</span>
+          </button>
+          <button class="exec-tab-btn" onclick="switchTab('dbTab', this)">
+            <i class="fa-solid fa-address-book me-2"></i> <span data-i18n="tab_database">ทะเบียนราษฎร์หลัก</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: Input -->
+      <div id="inputTab" class="tab-panel">
+        <div class="table-responsive">
+          <table class="table exec-table align-middle">
+            <thead>
+              <tr>
+                <th><i class="fa-regular fa-clock me-1"></i> <span data-i18n="th_time">วัน-เวลา</span></th>
+                <th><i class="fa-solid fa-gamepad me-1"></i> ROBLOX NAME</th>
+                <th><i class="fa-brands fa-discord me-1"></i> DISCORD</th>
+                <th><i class="fa-solid fa-desktop me-1"></i> <span data-i18n="th_equip">อุปกรณ์</span></th>
+                <th><i class="fa-solid fa-building me-1"></i> <span data-i18n="th_apply_agency">หน่วยงานที่สมัคร</span></th>
+                <th class="text-end"><i class="fa-solid fa-gears me-1"></i> <span data-i18n="th_action">การดำเนินการ</span></th>
+              </tr>
+            </thead>
+            <tbody id="inputTableBody">
+              <tr><td colspan="6" class="text-center py-5 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i> <span data-i18n="msg_loading">กำลังดึงข้อมูล...</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: Database -->
+      <div id="dbTab" class="tab-panel d-none">
+        <!-- Controls Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+          <!-- Filter Buttons -->
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-outline-cyan active" onclick="filterAgency('ALL', this)">
+              <i class="fa-solid fa-layer-group me-1"></i> <span data-i18n="btn_all">ทั้งหมด</span>
+            </button>
+            <button type="button" class="btn btn-outline-cyan" onclick="filterAgency('POLICE', this)">
+              <img src="Thai_National_Police_Flag.svg.webp" class="agency-flag-sm me-1" alt="Police">
+              <span data-i18n="agency_police">สำนักงานตำรวจแห่งชาติ</span>
+            </button>
+            <button type="button" class="btn btn-outline-cyan" onclick="filterAgency('NAVY', this)">
+              <img src="Naval_Ensign_of_Thailand-2.svg" class="agency-flag-sm me-1" alt="Navy">
+              <span data-i18n="agency_navy">กองทัพเรือ</span>
+            </button>
+          </div>
+
+          <!-- Search & Add Member -->
+          <div class="d-flex align-items-center gap-2">
+            <div class="position-relative">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="searchInput" class="exec-input ps-5" placeholder="ค้นหารายชื่อ, ยศ, เหล่า..." onkeyup="filterDatabase()">
+            </div>
+            <button class="btn btn-success fw-bold px-3 py-2 rounded-3" onclick="openAddModal()">
+              <i class="fa-solid fa-user-plus me-1"></i> <span data-i18n="btn_add_member">บวกรายชื่อ</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table exec-table align-middle">
+            <thead>
+              <tr>
+                <th>ROBLOX NAME</th>
+                <th><span data-i18n="th_profile">โปรไฟล์ Roblox</span></th>
+                <th>DISCORD</th>
+                <th><span data-i18n="th_equip">อุปกรณ์</span></th>
+                <th><span data-i18n="th_agency">หน่วยงาน</span></th>
+                <th><span data-i18n="th_rank">ยศ / ตำแหน่ง</span></th>
+                <th><span data-i18n="th_affiliation">สังกัด / เหล่า</span></th>
+                <th><span data-i18n="th_score">คะแนน</span></th>
+                <th class="text-end"><span data-i18n="th_action">การจัดการ</span></th>
+              </tr>
+            </thead>
+            <tbody id="dbTableBody">
+              <tr><td colspan="9" class="text-center py-5 text-muted"><i class="fa-solid fa-spinner fa-spin me-2"></i> <span data-i18n="msg_loading">กำลังดึงข้อมูล...</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal อนุมัติอัตโนมัติ -->
+  <div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content exec-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-success fw-bold"><i class="fa-solid fa-user-check me-2"></i> <span data-i18n="modal_approve_title">อนุมัติและบรรจุลงทะเบียนราษฎร์</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">Roblox Username</label>
+            <input type="text" class="exec-input w-100" id="approveRoblox" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="lbl_initial_rank">แต่งตั้งยศแรกรับ (กำหนดอัตโนมัติ)</label>
+            <input type="text" class="exec-input w-100" id="approveRank" readonly>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="lbl_initial_aff">สังกัด / เหล่า</label>
+            <input type="text" class="exec-input w-100" id="approveAffiliation" readonly>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal" data-i18n="btn_cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-success px-4 fw-bold" id="btnConfirmApprove" onclick="confirmApprove()" data-i18n="btn_confirm_approve">ยืนยันบรรจุ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal เพิ่มรายชื่อใหม่ -->
+  <div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content exec-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-success fw-bold"><i class="fa-solid fa-user-plus me-2"></i> <span data-i18n="modal_add_title">เพิ่มรายชื่อลงทะเบียนราษฎร์หลัก</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label">Name in Roblox *</label>
+              <input type="text" class="exec-input w-100" id="addRoblox" placeholder="GOTZILA0153" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label">Name in Discord</label>
+              <input type="text" class="exec-input w-100" id="addDiscord" placeholder="User#1234">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" data-i18n="th_equip">อุปกรณ์</label>
+              <select class="exec-input w-100" id="addEquip">
+                <option value="Pc" class="bg-dark text-white">PC</option>
+                <option value="iPad" class="bg-dark text-white">iPad</option>
+                <option value="Mobile" class="bg-dark text-white">Mobile</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" data-i18n="th_agency">หน่วยงาน</label>
+              <select class="exec-input w-100" id="addAgency">
+                <option value="Royal Thai Police" class="bg-dark text-white">Royal Thai Police</option>
+                <option value="Royal Thai Navy" class="bg-dark text-white">Royal Thai Navy</option>
+              </select>
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="th_rank">ยศ / ตำแหน่ง</label>
+            <select class="exec-input w-100" id="addRank"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="th_affiliation">สังกัด / เหล่า</label>
+            <select class="exec-input w-100" id="addAffiliation"></select>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-4">
+              <label class="form-label" data-i18n="th_score">คะแนนเริ่มต้น</label>
+              <input type="number" class="exec-input w-100" id="addScore" value="0">
+            </div>
+            <div class="col-8">
+              <label class="form-label">Roblox Profile Link</label>
+              <input type="text" class="exec-input w-100" id="addProfile" placeholder="https://www.roblox.com/...">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal" data-i18n="btn_cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-success fw-bold px-4" id="btnAddSave" onclick="saveNewMember()" data-i18n="btn_save_new">บันทึกรายชื่อใหม่</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal แก้ไข / ปรับยศ -->
+  <div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content exec-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-gold fw-bold"><i class="fa-solid fa-user-pen me-2"></i> <span data-i18n="modal_edit_title">ปรับแต่งยศ / เปลี่ยนเหล่าสังกัด</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label text-muted">Roblox Username</label>
+            <input type="text" class="exec-input w-100" id="editRoblox" readonly>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-6">
+              <label class="form-label" data-i18n="th_agency">หน่วยงาน</label>
+              <select class="exec-input w-100" id="editAgency">
+                <option value="Royal Thai Police" class="bg-dark text-white">Royal Thai Police</option>
+                <option value="Royal Thai Navy" class="bg-dark text-white">Royal Thai Navy</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label" data-i18n="th_score">คะแนนความดีความชอบ</label>
+              <input type="number" class="exec-input w-100" id="editScore">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="th_rank">ปรับชั้นยศ / ตำแหน่ง</label>
+            <select class="exec-input w-100" id="editRank"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" data-i18n="th_affiliation">เปลี่ยนเหล่า / สังกัด</label>
+            <select class="exec-input w-100" id="editAffiliation"></select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Roblox Profile Link</label>
+            <input type="text" class="exec-input w-100" id="editProfile" placeholder="https://www.roblox.com/...">
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal" data-i18n="btn_cancel">ยกเลิก</button>
+          <button type="button" class="btn btn-warning text-dark fw-bold px-4" id="btnSaveEdit" onclick="saveEdit()" data-i18n="btn_save_changes">บันทึกการเปลี่ยนแปลง</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
